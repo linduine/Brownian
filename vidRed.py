@@ -13,30 +13,30 @@ sys.path.append('/usr/local/lib/python2.7/site-packages')
 
 import numpy as np
 import collections
+import sched
 import itertools
 import time
 import json
 import cv2
 
-
 objects = {}
 cap = cv2.VideoCapture('one.avi')
+#cap.set(6, 1);
 j = open("data.json","wb")
-
 
 while(cap.isOpened()):
     ret, frame = cap.read()
     gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-
+    #insert a timer here
     circles = cv2.HoughCircles(gray,cv2.HOUGH_GRADIENT,1,50,
                         param1=50,param2=1,minRadius=0,maxRadius=10)
     if circles is not None:
         nframe = time.time()
     	circles = np.uint16(np.around(circles.astype(np.double),3))
         merged = list(itertools.chain.from_iterable(circles.tolist()))
-        objects[str(nframe)] = merged
-        json.dump(objects,j)
-        j.flush()
+        objects[str(nframe)] = {'Time': str(nframe), 'Moleculae': merged}
+        #json.dump(objects, j)
+        #j.flush()
 
     	for i in circles[0,:]:
     	# draw the outer circle
@@ -47,7 +47,11 @@ while(cap.isOpened()):
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
-
+json_str = json.dumps(objects, sort_keys=True, indent=2)
+print json_str
+j.write(json_str)
 j.close()
+print "JSON report written"
 cap.release()
 cv2.destroyAllWindows()
+print "Program finished"
