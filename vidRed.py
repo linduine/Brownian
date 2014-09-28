@@ -34,7 +34,8 @@ while(cap.isOpened()):
         nframe = time.time()
     	circles = np.uint16(np.around(circles.astype(np.double),3))
         merged = list(itertools.chain.from_iterable(circles.tolist()))
-        objects[str(nframe)] = {'Time': str(nframe), 'Moleculae': merged}
+        mergedSorted = sorted(merged, key=lambda element: (element[0], element[1]))
+        objects[str(nframe)] = {'Time': str(nframe), 'Moleculae': mergedSorted}
         #json.dump(objects, j)
         #j.flush()
 

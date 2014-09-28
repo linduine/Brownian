@@ -1,26 +1,42 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <link type="text/css" rel="stylesheet" href="style.css"/>
     <style type="text/css">
-
-
+    div.tooltip {   
+    position: absolute;           
+    text-align: center;           
+    width: 70px;                  
+    height: 48px;                 
+    padding: 2px;             
+    font: 12px sans-serif;        
+    background: teal;   
+    border: 1px;      
+    border-radius: 8px;           
+    pointer-events: none;         
+}
     </style>
   </head>
   <body>
     <h2>
       <span>Brownian motion</span>, <br>
       visualization from a CV processed video <br>
-      <h3> slowed down for educational purposes (from 25 fps to 2 fps) </h3>
+      <button type="button" id="watch">Watch</button>
+      <button type="button" id="stop">Stop/Remove</button>
+      <button type="button" id="step">Next step (step by step mode)</button>
+      <h3> slowed down for educational purposes (from 25 fps to 2 fps) - press Watch button </h3>
+      <h3> or enter step by step mode to see coordinates and calculate StDev  - press "Next step" button </h3>
     </h2>
-    </div>
     <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script type="text/javascript">
+
+ var width = $( window ).width();
+ var height = $( window ).height();
 
  var jsonCircles;
  var svgContainer = d3.select("body").append("svg")
-                                     .attr("width", 1000)
-                                     .attr("height", 1000);
+                                     .attr("width", width)
+                                     .attr("height", 0.6*height);
 
   d3.json("data.json", function(error, json) {
   if (error) return console.warn(error);
@@ -30,6 +46,10 @@
   var times = Object.keys(jsonCircles);
   var circles;
   var circleAttributes;
+
+  var div = d3.select("body").append("div") 
+    .attr("class", "tooltip")       
+    .style("opacity", 0);
 
   function drawing(input) {
     if (circles && circles.type != "undefined") { circles.remove() };
@@ -42,32 +62,55 @@
                        .attr("cx", function (d) { return d[0]; })
                        .attr("cy", function (d) { return d[1]; })
                        .attr("r", function (d) { return d[2]; })
-                       .style("fill", "black");
+                       .style("fill", "black")
+
+                       .on("mouseover", function(d) {   
+                          div.transition()    
+                          .duration(200)    
+                          .style("opacity", .9);    
+                          div .html("coordinates: " + "<br/>" + "x: " + d[0] + " y: "  + d[1] + " rad.: " + d[2])
+                              .style("left", (d3.event.pageX) + "px")   
+                              .style("top", (d3.event.pageY - 28) + "px");  
+                      })          
+                        .on("mouseout", function(d) {   
+                          div.transition()    
+                          .duration(500)    
+                          .style("opacity", 0); 
+        });
   }
 
  times = Object.keys(jsonCircles);
  var i = 0;
 
   function doSetTimeout(i) {
-    if(i<times.length) {
+    if(i<times.length-1) {
       setTimeout(function() { drawing(times[i]) }, 500);
       i++;
-      setTimeout(function() { doSetTimeout(i) }, 500);
+      t = setTimeout(function() { doSetTimeout(i) }, 500);
+    } else {
+      clearTimeout(t);
+      return i;
     }
   }
 
-    doSetTimeout(i);
+    $( "#watch" ).click(function() {
+    doSetTimeout(0);
+    });
 
-    //setTimeout(function(){drawing(times[i])}, 1000);
- /* Object.keys(jsonCircles).forEach(function(k) {
-    //jsonCircles[k].Moleculae.forEach(function(l) {
-      setTimeout(drawing(k), 1000);
-      setTimeout(console.log(jsonCircles[k].Moleculae.length), 1000);
-  //  });
+     $( "#stop" ).click(function() {
+      doSetTimeout(times.length+1);
+      circles.remove();
   });
-*/
+
+      $( "#step" ).click(function() {
+      drawing(times[i]);
+      i++;
+      if(i==times.length-1) { alert("Finished, no new data to draw"); }
+  });
 
 });
+
+
     </script>
   </body>
 </html>
