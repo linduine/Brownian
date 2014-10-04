@@ -23,9 +23,11 @@
       <button type="button" id="watch">Watch</button>
       <button type="button" id="stop">Stop/Remove</button>
       <button type="button" id="step">Next step (step by step mode)</button>
+      <button type="button" id="stepBack">Previous step (step by step mode)</button>
       <h3> slowed down for educational purposes (from 25 fps to 2 fps) - press Watch button </h3>
       <h3> or enter step by step mode to see coordinates and calculate StDev  - press "Next step" button </h3>
     </h2>
+    <div id="loading">Loading data, please wait...</div>
     <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script type="text/javascript">
@@ -38,7 +40,9 @@
                                      .attr("width", width)
                                      .attr("height", 0.6*height);
 
+  $( "#loading" ).show();
   d3.json("data.json", function(error, json) {
+  $( "#loading" ).hide();
   if (error) return console.warn(error);
   console.log(json);
   jsonCircles = json;
@@ -81,31 +85,43 @@
 
  times = Object.keys(jsonCircles);
  var i = 0;
+ var stop = 0;
 
-  function doSetTimeout(i) {
-    if(i<times.length-1) {
-      setTimeout(function() { drawing(times[i]) }, 500);
+  function doSetTimeout(inc) {
+    if(inc<times.length-1 & stop!=1) {
+      setTimeout(function() { drawing(times[inc]) }, 500);
+      inc++;
       i++;
-      t = setTimeout(function() { doSetTimeout(i) }, 500);
+      t = setTimeout(function() { doSetTimeout(inc) }, 500);
     } else {
       clearTimeout(t);
-      return i;
     }
   }
 
     $( "#watch" ).click(function() {
-    doSetTimeout(0);
+      stop =  0;
+      i = 0;
+      doSetTimeout(i);
     });
 
      $( "#stop" ).click(function() {
-      doSetTimeout(times.length+1);
+      //doSetTimeout(times.length);
+      stop = 1;
       circles.remove();
+      //alert(i);
   });
 
       $( "#step" ).click(function() {
-      drawing(times[i]);
+      drawing(times[i+1]);
       i++;
-      if(i==times.length-1) { alert("Finished, no new data to draw"); }
+      //alert(i);
+      if(i==times.length-1) { i=times.length-2; alert("Finished, no new data to draw"); }
+  });
+
+      $( "#stepBack" ).click(function() {
+      drawing(times[i-1]);
+      i--;
+      if(i==0) { i=0; alert("Finished, no new data to draw"); }
   });
 
 });
